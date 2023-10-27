@@ -1,28 +1,33 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.utils.Vector2D;
 
-@TeleOp(name="teleop")
+@TeleOp(name = "teleop")
 public class TeleOP extends LinearOpMode {
     DcMotor backleftDrive;
     DcMotor backrightDrive;
     DcMotor frontleftDrive;
     DcMotor frontrightDrive;
 
-    public BNO055IMU imu;
+    public IMU imu;
 
     public double angle;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        backleftDrive = hardwareMap.get(DcMotor.class, "m1");
-        backrightDrive = hardwareMap.get(DcMotor.class, "m2");
-        frontleftDrive = hardwareMap.get(DcMotor.class, "m3");
-        frontrightDrive = hardwareMap.get(DcMotor.class, "m4");
+        backleftDrive = hardwareMap.get(DcMotor.class, "backLeft");
+        backrightDrive = hardwareMap.get(DcMotor.class, "backRight");
+        frontleftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
+        frontrightDrive = hardwareMap.get(DcMotor.class, "frontRight");
 
         backleftDrive.setDirection(DcMotor.Direction.REVERSE);
         backrightDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -34,11 +39,14 @@ public class TeleOP extends LinearOpMode {
         frontleftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontrightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        imu = hardwareMap.get(IMU.class, "imu");
 
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        IMU.Parameters parameters = new IMU.Parameters(
+                new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                        RevHubOrientationOnRobot.UsbFacingDirection.UP
+                )
+        );
 
         //This is the potential imu starting program
 
@@ -47,9 +55,11 @@ public class TeleOP extends LinearOpMode {
 
         waitForStart();
 
-
         while (opModeIsActive()) {
-            telemetry.addData("direction", imu.getAngularOrientation());
+            YawPitchRollAngles robotOrientation = imu.getRobotYawPitchRollAngles();
+            telemetry.addData("Yaw", robotOrientation.getYaw(AngleUnit.DEGREES));
+            telemetry.addData("Roll", robotOrientation.getRoll(AngleUnit.DEGREES));
+            telemetry.addData("Pitch", robotOrientation.getPitch(AngleUnit.DEGREES));
 
             if(gamepad1.y)
             {
@@ -57,7 +67,7 @@ public class TeleOP extends LinearOpMode {
                 imu.initialize(parameters);
             }
 
-            angle = imu.getAngularOrientation().firstAngle;
+            angle = robotOrientation.getYaw(AngleUnit.RADIANS);
 
             double x = gamepad1.left_stick_x;
             double y = -gamepad1.left_stick_y;
@@ -81,23 +91,25 @@ public class TeleOP extends LinearOpMode {
             if(gamepad1.right_trigger < 0.5)
             {
                 telemetry.addData("Status", "trigger off");
-                coefficient=coefficient;
+                coefficient = coefficient;
             }
             else
             {
                 telemetry.addData("Status", "trigger on");
-                coefficient=1;
+                coefficient = 1;
             }
 
-            telemetry.addData("Front Left Power", frontleftPower*coefficient);
+            telemetry.addData("Front Left Power", frontleftPower * coefficient);
+
             backrightDrive.setPower(backrightPower * coefficient);
             backleftDrive.setPower(backleftPower * coefficient);
             frontrightDrive.setPower(frontrightPower * coefficient);
             frontleftDrive.setPower(frontleftPower * coefficient);
 
             telemetry.update();
-        }
-    }
 
+        }
+
+    }
 
 }
