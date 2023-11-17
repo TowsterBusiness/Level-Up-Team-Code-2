@@ -5,9 +5,11 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.utils.ButtonToggle;
 import org.firstinspires.ftc.teamcode.utils.Vector2D;
 
 @TeleOp(name = "teleop")
@@ -17,9 +19,23 @@ public class TeleOP extends LinearOpMode {
     DcMotor frontleftDrive;
     DcMotor frontrightDrive;
 
+    Servo claw;
+    float clawPosition = 0;
+    ButtonToggle clawToggle = new ButtonToggle();
+    Servo clawHinge;
+    float clawHingePosition = 0;
     public IMU imu;
 
+    boolean isClawOpen = false;
+
     public double angle;
+
+    public DcMotor arm1;
+    public DcMotor arm2;
+
+    public double armAngle1 = 2357;
+    public double armAngle2 = 650;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -27,6 +43,10 @@ public class TeleOP extends LinearOpMode {
         backrightDrive = hardwareMap.get(DcMotor.class, "backRight");
         frontleftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
         frontrightDrive = hardwareMap.get(DcMotor.class, "frontRight");
+        arm1 = hardwareMap.get(DcMotor.class, "baseArm");
+        arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
+        claw = hardwareMap.get(Servo.class, "claw");
+        clawHinge = hardwareMap.get(Servo.class, "clawHinge");
 
         backleftDrive.setDirection(DcMotor.Direction.REVERSE);
         backrightDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -38,12 +58,23 @@ public class TeleOP extends LinearOpMode {
         frontleftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontrightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        arm1.setTargetPosition((int) armAngle1);
+        arm2.setTargetPosition((int) armAngle2);
+
+        arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+
         imu = hardwareMap.get(IMU.class, "imu");
 
         IMU.Parameters parameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                        RevHubOrientationOnRobot.UsbFacingDirection.UP
+                        RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                        RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD
                 )
         );
 
@@ -54,17 +85,11 @@ public class TeleOP extends LinearOpMode {
 
         waitForStart();
 
+
+
         while (opModeIsActive()) {
             YawPitchRollAngles robotOrientation = imu.getRobotYawPitchRollAngles();
             telemetry.addData("Yaw", robotOrientation.getYaw(AngleUnit.DEGREES));
-            telemetry.addData("Roll", robotOrientation.getRoll(AngleUnit.DEGREES));
-            telemetry.addData("Pitch", robotOrientation.getPitch(AngleUnit.DEGREES));
-
-            if(gamepad1.y)
-            {
-                telemetry.addData("Direction Mode:" , "Forward Mode");
-                imu.initialize(parameters);
-            }
 
             angle = robotOrientation.getYaw(AngleUnit.RADIANS);
 
@@ -87,15 +112,19 @@ public class TeleOP extends LinearOpMode {
 
             // pressurising the right trigger slows down the drive train
             double coefficient = 0.35;
+            double coefficientArm = 1;
             if(gamepad1.right_trigger < 0.5)
             {
-                telemetry.addData("Status", "trigger off");
+                telemetry.addData("Yeet Mode", "off");
             }
             else
             {
-                telemetry.addData("Status", "trigger on");
+                telemetry.addData("YeetMode", "trigger on");
                 coefficient = 1;
+                coefficientArm = 1.5f;
             }
+            arm1.setPower(0.3 * coefficientArm);
+            arm2.setPower(0.1 * coefficientArm);
 
             telemetry.addData("Front Left Power", frontleftPower * coefficient);
 
@@ -103,6 +132,47 @@ public class TeleOP extends LinearOpMode {
             backleftDrive.setPower(backleftPower * coefficient);
             frontrightDrive.setPower(frontrightPower * coefficient);
             frontleftDrive.setPower(frontleftPower * coefficient);
+
+            // clawHinge Movement
+            clawHingePosition += gamepad2.right_stick_y * 0.005;
+
+//            float clawHingeUpperBound = 1;
+//            float clawHingeLowerBound = 0.66f;
+//            if (clawHingePosition >= clawHingeUpperBound) {
+//                clawHingePosition = clawHingeUpperBound;
+//            } else if (clawPosition <= clawHingeLowerBound) {
+//                clawPosition = clawHingeLowerBound;
+//            }
+//            telemetry.addData("y3", clawHingePosition);
+//            clawHinge.setPosition(clawHingePosition);
+
+            // Claw Movement
+            clawToggle.update(gamepad2.a);
+            float clawOpenPosition = 0.1f;
+            float clawClosedPosition = 0.38f;
+            if (gamepad2.a) {
+                claw.setPosition(clawOpenPosition);
+            } else {
+                claw.setPosition(clawClosedPosition);
+            }
+
+
+            if (gamepad2.x) {
+                armAngle1 = 1504;
+                armAngle2 = 840;
+                clawHingePosition = 0.65f;
+            } else if (gamepad2.y) {
+                armAngle1 = 2357;
+                armAngle2 = 650;
+                clawHingePosition = 0.65f;
+            } else if (gamepad2.b) {
+                armAngle1 = 1993;
+                armAngle2 = 241;
+                clawHingePosition = 0.22f;
+            }
+            arm1.setTargetPosition((int) armAngle1);
+            arm2.setTargetPosition((int) armAngle2);
+            clawHinge.setPosition(clawHingePosition);
 
             telemetry.update();
 
