@@ -88,6 +88,15 @@ public class TeleOP extends LinearOpMode {
 
 
         while (opModeIsActive()) {
+
+            if (gamepad1.y) {
+                imu.initialize(parameters);
+            }
+            if (gamepad1.back) {
+                armAngle1 = 0;
+                armAngle2 = 0;
+            }
+
             YawPitchRollAngles robotOrientation = imu.getRobotYawPitchRollAngles();
             telemetry.addData("Yaw", robotOrientation.getYaw(AngleUnit.DEGREES));
 
@@ -121,6 +130,15 @@ public class TeleOP extends LinearOpMode {
             {
                 telemetry.addData("YeetMode", "trigger on");
                 coefficient = 1;
+            }
+
+            if(gamepad2.right_trigger < 0.5)
+            {
+                telemetry.addData("Yeet Mode2", "off");
+            }
+            else
+            {
+                telemetry.addData("YeetMode2", "trigger on");
                 coefficientArm = 1.5f;
             }
             arm1.setPower(0.3 * coefficientArm);
@@ -166,9 +184,16 @@ public class TeleOP extends LinearOpMode {
                 armAngle2 = 650;
                 clawHingePosition = 0.65f;
             } else if (gamepad2.b) {
-                armAngle1 = 1993;
-                armAngle2 = 241;
+                armAngle1 = 1616;//1993;
+                armAngle2 = 136;//241;
                 clawHingePosition = 0.22f;
+            } else if (gamepad2.dpad_up) {
+                //1280 333 1976 440
+                armAngle1 = 1280;
+                armAngle2 = 333;
+            } else if (gamepad2.dpad_down) {
+                armAngle1 = 529;//1976;
+                armAngle2 = 130;//440;
             }
             arm1.setTargetPosition((int) armAngle1);
             arm2.setTargetPosition((int) armAngle2);
