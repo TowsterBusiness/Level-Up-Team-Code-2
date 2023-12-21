@@ -37,18 +37,18 @@ public class RobotMovement {
     public static void right(int amount) {
         if (hardwareMap == null || frontRightDrive == null || frontLeftDrive == null || backRightDrive == null || backLeftDrive == null) return;
 
-        backRightDrive.setTargetPosition(backRightDrive.getCurrentPosition() - amount * backRightCoefficient);
+        backRightDrive.setTargetPosition(backRightDrive.getCurrentPosition() + amount * backRightCoefficient);
         backLeftDrive.setTargetPosition(backLeftDrive.getCurrentPosition() - amount * backLeftCoefficient);
         frontRightDrive.setTargetPosition(frontRightDrive.getCurrentPosition() - amount * frontRightCoefficient);
-        frontLeftDrive.setTargetPosition(frontLeftDrive.getCurrentPosition() - amount * frontLeftCoefficient);
+        frontLeftDrive.setTargetPosition(frontLeftDrive.getCurrentPosition() + amount * frontLeftCoefficient);
     }
 
     public static void left(int amount) {
         if (hardwareMap == null || frontRightDrive == null || frontLeftDrive == null || backRightDrive == null || backLeftDrive == null) return;
 
         backRightDrive.setTargetPosition(backRightDrive.getCurrentPosition() - amount * backRightCoefficient);
-        backLeftDrive.setTargetPosition(backLeftDrive.getCurrentPosition() - amount * backLeftCoefficient);
-        frontRightDrive.setTargetPosition(frontRightDrive.getCurrentPosition() - amount * frontRightCoefficient);
+        backLeftDrive.setTargetPosition(backLeftDrive.getCurrentPosition() + amount * backLeftCoefficient);
+        frontRightDrive.setTargetPosition(frontRightDrive.getCurrentPosition() + amount * frontRightCoefficient);
         frontLeftDrive.setTargetPosition(frontLeftDrive.getCurrentPosition() - amount * frontLeftCoefficient);
     }
 

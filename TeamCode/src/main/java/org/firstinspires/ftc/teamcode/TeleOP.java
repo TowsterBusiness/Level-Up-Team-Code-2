@@ -6,10 +6,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.utils.ButtonToggle;
+import org.firstinspires.ftc.teamcode.utils.PIDController;
 import org.firstinspires.ftc.teamcode.utils.Vector2D;
 
 @TeleOp(name = "teleop")
@@ -33,16 +35,20 @@ public class TeleOP extends LinearOpMode {
     public DcMotor arm1;
     public DcMotor arm2;
 
-    public double armAngle1 = 2357;
-    public double armAngle2 = 650;
+    public double armAngle1 = 0;
+    public double armAngle2 = 0;
+
+    PIDController pid1 = new PIDController(0.8f, 0f, 0f);
+    PIDController pid2 = new PIDController(0.8f, 0f, 0f);
+    ElapsedTime et = new ElapsedTime();
 
 
     @Override
     public void runOpMode() throws InterruptedException {
-        backleftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
-        backrightDrive = hardwareMap.get(DcMotor.class, "backRight");
-        frontleftDrive = hardwareMap.get(DcMotor.class, "backLeft");
-        frontrightDrive = hardwareMap.get(DcMotor.class, "frontRight");
+        backleftDrive = hardwareMap.get(DcMotor.class, "leftFront");
+        backrightDrive = hardwareMap.get(DcMotor.class, "rightRear");
+        frontleftDrive = hardwareMap.get(DcMotor.class, "leftRear");
+        frontrightDrive = hardwareMap.get(DcMotor.class, "rightFront");
         arm1 = hardwareMap.get(DcMotor.class, "baseArm");
         arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
         claw = hardwareMap.get(Servo.class, "claw");
@@ -60,12 +66,12 @@ public class TeleOP extends LinearOpMode {
 
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//
+//        arm1.setTargetPosition((int) armAngle1);
+//        arm2.setTargetPosition((int) armAngle2);
 
-        arm1.setTargetPosition((int) armAngle1);
-        arm2.setTargetPosition((int) armAngle2);
-
-        arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        arm2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
 
@@ -81,15 +87,19 @@ public class TeleOP extends LinearOpMode {
         //This is the potential imu starting program
 
         telemetry.addData("Direction Mode:" , "Back Mode");
+        imu.resetYaw();
         imu.initialize(parameters);
 
         waitForStart();
 
-
+        et.reset();
 
         while (opModeIsActive()) {
+            float dt = (float) et.milliseconds();
+            et.reset();
 
             if (gamepad1.y) {
+                imu.resetYaw();
                 imu.initialize(parameters);
             }
             if (gamepad1.back) {
@@ -131,18 +141,18 @@ public class TeleOP extends LinearOpMode {
                 telemetry.addData("YeetMode", "trigger on");
                 coefficient = 1;
             }
-
-            if(gamepad2.right_trigger < 0.5)
-            {
-                telemetry.addData("Yeet Mode2", "off");
-            }
-            else
-            {
-                telemetry.addData("YeetMode2", "trigger on");
-                coefficientArm = 1.5f;
-            }
-            arm1.setPower(0.3 * coefficientArm);
-            arm2.setPower(0.1 * coefficientArm);
+//
+//            if(gamepad2.right_trigger < 0.5)
+//            {
+//                telemetry.addData("Yeet Mode2", "off");
+//            }
+//            else
+//            {
+//                telemetry.addData("YeetMode2", "trigger on");
+//                coefficientArm = 1.5f;
+//            }
+//            arm1.setPower(0.8 * coefficientArm);
+//            arm2.setPower(0.8 * coefficientArm);
 
             telemetry.addData("Front Left Power", frontleftPower * coefficient);
 
@@ -195,9 +205,17 @@ public class TeleOP extends LinearOpMode {
                 armAngle1 = 529;//1976;
                 armAngle2 = 130;//440;
             }
-            arm1.setTargetPosition((int) armAngle1);
-            arm2.setTargetPosition((int) armAngle2);
+            float v1 = pid1.update((float) (arm1.getCurrentPosition() - armAngle1) / 14.45277777f, dt);
+            float v2 = pid2.update((float) (arm2.getCurrentPosition() - armAngle2) / -3.33333333f, dt);
+
+            arm1.setPower(v1 / -17 / 4);
+            arm2.setPower(v2 / 204 / 4);
+
+            telemetry.addData("v1: ", v1 / -17 / 4);
+            telemetry.addData("v2: ", v2 / 250 / 4);
+
             clawHinge.setPosition(clawHingePosition);
+
 
             telemetry.update();
 

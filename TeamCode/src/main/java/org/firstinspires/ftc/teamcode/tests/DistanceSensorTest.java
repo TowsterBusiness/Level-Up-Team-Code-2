@@ -9,12 +9,18 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-@Autonomous(name = "test auto")
+@Autonomous(name = "distance test")
 public class DistanceSensorTest extends LinearOpMode {
     DistanceSensor ds;
     @Override
     public void runOpMode() throws InterruptedException {
         ds = hardwareMap.get(DistanceSensor.class, "ds");
-        ds.getDistance(DistanceUnit.CM)
+        waitForStart();
+        while (opModeIsActive()) {
+            double distance = ds.getDistance(DistanceUnit.CM);
+            telemetry.addData("Distance", distance);
+            telemetry.update();
+        }
+
     }
 }

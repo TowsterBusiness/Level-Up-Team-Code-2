@@ -7,10 +7,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.utils.InverseKinematics;
+import org.firstinspires.ftc.teamcode.utils.PIDController;
 import org.firstinspires.ftc.teamcode.utils.Vector2D;
 
 @TeleOp(name = "armtesting")
@@ -28,6 +30,11 @@ public class ArmTesting extends LinearOpMode {
     float pastArmAngle1 = 0;
     float pastArmAngle2 = 0;
 
+    PIDController pid1 = new PIDController(0.8f, 0f, 0);
+    PIDController pid2 = new PIDController(0.8f, 0f, 0);
+
+    ElapsedTime et = new ElapsedTime();
+
     @Override
     public void runOpMode() throws InterruptedException {
         arm1 = hardwareMap.get(DcMotor.class, "baseArm");
@@ -39,18 +46,21 @@ public class ArmTesting extends LinearOpMode {
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        arm1.setTargetPosition(0);
-        arm2.setTargetPosition(0);
+        arm1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        arm2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        arm1.setPower(0.3);
-        arm2.setPower(0.1);
+        arm1.setPower(0);
+        arm2.setPower(0);
 
         waitForStart();
 
+        et.reset();
+
         while (opModeIsActive()) {
+            float dt = (float) et.milliseconds();
+            et.reset();
+            telemetry.addData("dt", dt);
+
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
 
@@ -81,11 +91,19 @@ public class ArmTesting extends LinearOpMode {
                 pastArmAngle1 = arm3Angle;
                 pastArmAngle2 = arm4Angle;
 
-                arm1.setTargetPosition((int) (finAngle1 * 14.45277777f));
-                arm2.setTargetPosition((int) (finAngle2 * -3.33333333333 + 612));
+                float v1 = pid1.update(arm1.getCurrentPosition() / 14.45277777f - finAngle1, dt);
+                float v2 = pid2.update((arm2.getCurrentPosition() - 612) / -3.33333333f - finAngle2, dt);
 
+                arm1.setPower(v1 / -17);
+                arm2.setPower(v2 / 204);
+
+                telemetry.addData("v1: ", v1 / -17);
+                telemetry.addData("v2: ", v2 / 250);
                 telemetry.addData("arm1: ", finAngle1);
                 telemetry.addData("arm2: ", finAngle2);
+            } else {
+                arm1.setPower(0);
+                arm2.setPower(0);
             }
 
             telemetry.addData("x: ", finX);
