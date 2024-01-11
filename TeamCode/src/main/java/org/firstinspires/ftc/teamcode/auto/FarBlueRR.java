@@ -3,9 +3,11 @@ package org.firstinspires.ftc.teamcode.auto;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -17,24 +19,37 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.utils.RobotMovement;
 
 @Autonomous(name = "Far Blue")
-public class FarBlueRR extends LinearOpMode {
+public class FarBlueRR extends OpMode {
     enum States {
-        START
+        TRY1,
+        PLACE1,
+        PLACE2,
+        TRY2,
+        PLACE,
+        PLACEPIXEL
     }
 
-    States state = States.START;
-
+    States state = null;
     Servo claw;
     Servo clawHinge;
-
     DcMotor arm1;
     DcMotor arm2;
     DistanceSensor ds;
+    SampleMecanumDrive drive;
+    double min = 99999999;
+    double min2 = 99999999;
+
+    Trajectory trajectory;
+    Trajectory placePixel1;
+    Trajectory trajectory2;
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void init() {
         Telemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        drive = new SampleMecanumDrive(hardwareMap);
+
+        arm1 = hardwareMap.get(DcMotor.class, "baseArm");
+        arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
 
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -42,30 +57,51 @@ public class FarBlueRR extends LinearOpMode {
         claw = hardwareMap.get(Servo.class, "claw");
         clawHinge = hardwareMap.get(Servo.class, "clawHinge");
 
-//        claw.setPosition(0.38);
+        claw.setPosition(0.38);
 
-        Trajectory trajectory = drive.trajectoryBuilder(new Pose2d(0,0, 90))
-                .back(11.5)
-                .strafeRight(26.25)
-                .strafeRight(12.5)
+
+
+        Trajectory trajectory = drive.trajectoryBuilder(new Pose2d(0, 0, 0))
+                .splineToConstantHeading(new Vector2d(-14, 12), Math.toRadians(0))
+                .addDisplacementMarker(() -> {
+                    state = States.TRY1;
+                })
+                .strafeLeft(12)
+                .addDisplacementMarker(() -> {
+                    if (min <= 10) {
+                        drive.followTrajectoryAsync(placePixel1);
+                    } else {
+                        drive.followTrajectoryAsync(trajectory2);
+                    }
+                })
                 .build();
 
-        waitForStart();
+        Trajectory placePixel1 = drive.trajectoryBuilder(trajectory.end())
+                .addDisplacementMarker(() -> {
+                    state = States.PLACEPIXEL;
+                })
+                .build();
 
-        if (isStopRequested()) return;
+        Trajectory trajectory2 = drive.trajectoryBuilder(trajectory.end())
+                .lineToLinearHeading()
+                .build();
+    }
 
-        drive.followTrajectory(trajectory);
+    @Override
+    public void loop() {
+        if (state == States.TRY1) {
+            min = Math.min(ds.getDistance(DistanceUnit.CM), min);
+        } else if (state == States.TRY2) {
+            min2 = Math.min(ds.getDistance(DistanceUnit.CM), min2);
+        }
 
-        Pose2d poseEstimate = drive.getPoseEstimate();
-        telemetry.addData("finalX", poseEstimate.getX());
-        telemetry.addData("finalY", poseEstimate.getY());
-        telemetry.addData("finalHeading", poseEstimate.getHeading());
+        telemetry.addData("Min", min);
+        telemetry.addData("Min2", min2);
+        drive.update();
         telemetry.update();
+    }
 
-        while (!isStopRequested() && opModeIsActive());
-
-
-//
+    //
 //        waitForStart();
 //
 //        RobotMovement.right(510);

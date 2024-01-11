@@ -94,11 +94,14 @@ public class ArmTesting extends LinearOpMode {
                 float v1 = pid1.update(arm1.getCurrentPosition() / 14.45277777f - finAngle1, dt);
                 float v2 = pid2.update((arm2.getCurrentPosition() - 612) / -3.33333333f - finAngle2, dt);
 
-                arm1.setPower(v1 / -17);
-                arm2.setPower(v2 / 204);
+                // allows breaking if there isn't muh velocity applied
+                float vf1 = Math.abs(v1 / -17) < 1E-2 ? 0 : v1 / -17;
+                float vf2 = Math.abs(v1 / 204) < 1E-2 ? 0 : v1 / 204;
+                arm1.setPower(vf1);
+                arm2.setPower(vf2);
 
-                telemetry.addData("v1: ", v1 / -17);
-                telemetry.addData("v2: ", v2 / 250);
+                telemetry.addData("v1: ", vf1);
+                telemetry.addData("v2: ", vf2);
                 telemetry.addData("arm1: ", finAngle1);
                 telemetry.addData("arm2: ", finAngle2);
             } else {
