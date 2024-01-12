@@ -69,12 +69,11 @@ public class FarBlueRR extends OpMode {
 
 
 
-        Trajectory trajectory = drive.trajectoryBuilder(new Pose2d(0, 0, 0))
-                .splineToConstantHeading(new Vector2d(-14, 12), Math.toRadians(0))
+        Trajectory trajectory = drive.trajectorySequenceBuilder(new Pose2d(0, 0, Math.toRadians(180)))
+                .splineToConstantHeading(new Vector2d(-10, -24), Math.toRadians(-90))
                 .addDisplacementMarker(() -> {
                     state = States.TRY1;
                 })
-                .strafeLeft(12)
                 .addDisplacementMarker(() -> {
                     if (min <= 10) {
                         drive.followTrajectoryAsync(PLACE_PIXEL11);
