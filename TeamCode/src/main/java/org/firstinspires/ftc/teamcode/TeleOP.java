@@ -78,12 +78,14 @@ public class TeleOP extends OpMode {
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        arm1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        arm2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        arm1.setTargetPosition((int) armAngle1);
+        arm2.setTargetPosition((int) armAngle2);
+        arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm1.setPower(0.5);
+        arm2.setPower(0.5);
 
         imu = hardwareMap.get(IMU.class, "imu");
-
-
 
         //This is the potential imu starting program
 
@@ -146,17 +148,6 @@ public class TeleOP extends OpMode {
             telemetry.addData("YeetMode", "trigger on");
             coefficient = 1;
         }
-//
-//            {
-//                telemetry.addData("Yeet Mode2", "off");//            if(gamepad2.right_trigger < 0.5)
-//            }
-//            else
-//            {
-//                telemetry.addData("YeetMode2", "trigger on");
-//                coefficientArm = 1.5f;
-//            }
-//            arm1.setPower(0.8 * coefficientArm);
-//            arm2.setPower(0.8 * coefficientArm);
 
         telemetry.addData("Front Left Power", frontleftPower * coefficient);
 
@@ -167,16 +158,6 @@ public class TeleOP extends OpMode {
 
         // clawHinge Movement
         clawHingePosition += gamepad2.right_stick_y * 0.005;
-
-//            float clawHingeUpperBound = 1;
-//            float clawHingeLowerBound = 0.66f;
-//            if (clawHingePosition >= clawHingeUpperBound) {
-//                clawHingePosition = clawHingeUpperBound;
-//            } else if (clawPosition <= clawHingeLowerBound) {
-//                clawPosition = clawHingeLowerBound;
-//            }
-//            telemetry.addData("y3", clawHingePosition);
-//            clawHinge.setPosition(clawHingePosition);
 
         // Claw Movement
         clawToggle.update(gamepad2.a);
@@ -190,39 +171,35 @@ public class TeleOP extends OpMode {
 
 
         if (gamepad2.x) {
-            armAngle1 = 1194;//1348;//1537;
-            armAngle2 = 829;//843;//860;
-            clawHingePosition = 0.422f;//0.592f;
+            armAngle1 = 1275;
+            armAngle2 = 3197;
+            clawHingePosition = 0.437f;
         } else if (gamepad2.y) {
-            armAngle1 = 2262;//2357;
-            armAngle2 = 627;//650;
-            clawHingePosition = 0.66f;
-        } else if (gamepad2.b) {
-            armAngle1 = 1795;//1616;//1993;
-            armAngle2 = 99;//136;//241;
+            armAngle1 = 2461;
+            armAngle2 = 2287;
             clawHingePosition = 0f;
+        } else if (gamepad2.b) {
+            armAngle1 = 1350;
+            armAngle2 = 1333;
+            clawHingePosition = 0.44f;
         } else if (gamepad2.dpad_up) {
-            //1280 333 1976 440
-            armAngle1 = 1280;
-            armAngle2 = 333;
+            armAngle1 = 1357;
+            armAngle2 = 1282;
+            clawHingePosition = 0.44f;
         } else if (gamepad2.dpad_down) {
-            armAngle1 = 529;//1976;
-            armAngle2 = 130;//440;
-        }
-        if (gamepad2.left_trigger > 0.5) {
+            armAngle1 = 668;
+            armAngle2 = 708;
+        } else if (gamepad2.left_trigger > 0.5) {
             droneHinge.setPosition(0.2);
         }
 
         telemetry.addData("drone pos: ", droneHinge.getPosition());
 
-        float v1 = pid1.update((float) (arm1.getCurrentPosition() - armAngle1) / 14.45277777f, dt);
-        float v2 = pid2.update((float) (arm2.getCurrentPosition() - armAngle2) / -3.33333333f, dt);
+        arm1.setTargetPosition((int) armAngle1);
+        arm2.setTargetPosition((int) armAngle2);
 
-        arm1.setPower(v1 / -17 / 4);
-        arm2.setPower(v2 / 204 / 4);
-
-        telemetry.addData("v1: ", v1 / -17 / 4);
-        telemetry.addData("v2: ", v2 / 250 / 4);
+        telemetry.addData("arm1 en", arm1.getCurrentPosition());
+        telemetry.addData("arm2 en", arm2.getCurrentPosition());
 
         clawHinge.setPosition(clawHingePosition);
         telemetry.update();

@@ -18,8 +18,8 @@ public class ArmTesting2 extends LinearOpMode {
     DcMotor arm1;
     DcMotor arm2;
 
-    float finX = 0;//-208;
-    float finY = 0;//-1800;
+    float finX = 0;
+    float finY = 0;
     float armLength1 = 8.5f;
     float armLength2 = 18;
 
@@ -47,13 +47,7 @@ public class ArmTesting2 extends LinearOpMode {
 
         while (opModeIsActive()) {
             clawHingePosition += gamepad2.right_stick_y * 0.005;
-//            float clawHingeUpperBound = 1;
-//            float clawHingeLowerBound = 0.66f;
-//            if (clawHingePosition >= clawHingeUpperBound) {
-//                clawHingePosition = clawHingeUpperBound;
-//            } else if (clawHingePohdsition <= clawHingeLowerBound) {
-//                clawHingePosition = clawHingeLowerBound;
-//            }
+
             clawHinge.setPosition(clawHingePosition);
             telemetry.addData("claw hinge position", clawHingePosition);
 
@@ -62,16 +56,13 @@ public class ArmTesting2 extends LinearOpMode {
             finY += y * 0.5f;
             finX += x * 0.5f;
             arm1.setTargetPosition((int) (finY * 14.45277777f));
-            arm2.setTargetPosition((int) (finX * -3.33333333333 + 612));
+            arm2.setTargetPosition((int) (finX * -14 + 612));
             telemetry.addData("Arm Position: ", finY);
             telemetry.addData("Arm2 Position: ", finX);
             telemetry.addData("Arm Encoder: ", arm1.getCurrentPosition());
             telemetry.addData("Arm2 Position: ", arm2.getCurrentPosition());
 
             telemetry.update();
-
-
-
         }
     }
 
