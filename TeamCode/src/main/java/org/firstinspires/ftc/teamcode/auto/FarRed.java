@@ -25,10 +25,10 @@ public class FarRed extends LinearOpMode {
     DistanceSensor ds;
     @Override
     public void runOpMode() throws InterruptedException {
-        backleftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
-        backrightDrive = hardwareMap.get(DcMotor.class, "backRight");
-        frontleftDrive = hardwareMap.get(DcMotor.class, "backLeft");
-        frontrightDrive = hardwareMap.get(DcMotor.class, "frontRight");
+        backleftDrive = hardwareMap.get(DcMotor.class, "leftFront");
+        backrightDrive = hardwareMap.get(DcMotor.class, "rightRear");
+        frontleftDrive = hardwareMap.get(DcMotor.class, "leftRear");
+        frontrightDrive = hardwareMap.get(DcMotor.class, "rightFront");
         ds = hardwareMap.get(DistanceSensor.class, "ds");
         arm1 = hardwareMap.get(DcMotor.class, "baseArm");
         arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
@@ -95,10 +95,10 @@ public class FarRed extends LinearOpMode {
             sleep(10);
             RobotMovement.backward(1400);
             sleep(1000);
-            arm1.setPower(0.3);
-            arm2.setPower(0.1);
-            arm1.setTargetPosition(1504);
-            arm2.setTargetPosition(840);
+            arm1.setPower(0.5);
+            arm2.setPower(0.5);
+            arm1.setTargetPosition(1275);
+            arm2.setTargetPosition(3197);
             arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -134,10 +134,10 @@ public class FarRed extends LinearOpMode {
                 sleep(1000);
                 RobotMovement.backward(790);
                 sleep(1000);
-                arm1.setPower(0.3);
-                arm2.setPower(0.1);
-                arm1.setTargetPosition(1504);
-                arm2.setTargetPosition(840);
+                arm1.setPower(0.5);
+                arm2.setPower(0.5);
+                arm1.setTargetPosition(1275);
+                arm2.setTargetPosition(3197);
                 arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -185,10 +185,10 @@ public class FarRed extends LinearOpMode {
                     }
                 }
 
-                arm1.setPower(0.3);
-                arm2.setPower(0.1);
-                arm1.setTargetPosition(1504);
-                arm2.setTargetPosition(840);
+                arm1.setPower(0.5);
+                arm2.setPower(0.5);
+                arm1.setTargetPosition(1275);
+                arm2.setTargetPosition(3197);
                 arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 

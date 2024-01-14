@@ -25,10 +25,10 @@ public class FarBlue extends LinearOpMode {
     DistanceSensor ds;
     @Override
     public void runOpMode() throws InterruptedException {
-        backleftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
-        backrightDrive = hardwareMap.get(DcMotor.class, "backRight");
-        frontleftDrive = hardwareMap.get(DcMotor.class, "backLeft");
-        frontrightDrive = hardwareMap.get(DcMotor.class, "frontRight");
+        backleftDrive = hardwareMap.get(DcMotor.class, "leftFront");
+        backrightDrive = hardwareMap.get(DcMotor.class, "rightRear");
+        frontleftDrive = hardwareMap.get(DcMotor.class, "leftRear");
+        frontrightDrive = hardwareMap.get(DcMotor.class, "rightFront");
         ds = hardwareMap.get(DistanceSensor.class, "ds");
         arm1 = hardwareMap.get(DcMotor.class, "baseArm");
         arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
@@ -167,8 +167,8 @@ public class FarBlue extends LinearOpMode {
 
         arm1.setPower(0.3);
         arm2.setPower(0.1);
-        arm1.setTargetPosition(2357);
-        arm2.setTargetPosition(640);
+        arm1.setTargetPosition(1275);
+        arm2.setTargetPosition(3197);
         arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         clawHinge.setPosition(0.65);

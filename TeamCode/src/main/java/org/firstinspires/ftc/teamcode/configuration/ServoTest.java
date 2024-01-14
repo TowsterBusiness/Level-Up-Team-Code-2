@@ -9,10 +9,28 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class ServoTest extends LinearOpMode {
     Servo servo;
 
+    Servo servo2;
+
+    Servo servo3;
+
+    Servo servo4;
+
+    DcMotor motor1;
+
+    DcMotor motor2;
     double pos = 0;
+    double pos2 = 0;
+
+    double pos3 = 0;
+
+    double pos4 = 0;
+
     @Override
     public void runOpMode() throws InterruptedException {
-        servo = hardwareMap.get(Servo.class, "servo");
+        servo = hardwareMap.get(Servo.class, "claw");
+        servo2 = hardwareMap.get(Servo.class, "clawHinge");
+        servo3 = hardwareMap.get(Servo.class, "droneHinge");
+        servo4 = hardwareMap.get(Servo.class, "droneSafety");
 
         waitForStart();
 
@@ -28,7 +46,44 @@ public class ServoTest extends LinearOpMode {
 
             servo.setPosition(pos);
             telemetry.addData("servo pos", pos);
+
+            pos2 += gamepad1.right_stick_x * 0.05;
+            if (gamepad1.y) {
+                pos2 = 0;
+            }
+            if (gamepad1.a) {
+                pos2 = 1;
+            }
+
+            servo2.setPosition(pos2);
+            telemetry.addData("servo pos 2", pos2);
+
+            pos3+= gamepad2.left_stick_x * 0.05;
+            if (gamepad2.dpad_up) {
+                pos3 = 0;
+            }
+            if (gamepad2.dpad_down) {
+                pos3 = 1;
+            }
+
+            servo3.setPosition(pos3);
+            telemetry.addData("servo pos 3", pos3);
+
+            pos4 += gamepad2.right_stick_x * 0.05;
+            if (gamepad2.y) {
+                pos4 = 0;
+            }
+            if (gamepad2.a) {
+                pos4 = 1;
+            }
+
+            servo4.setPosition(pos4);
+            telemetry.addData("servo pos 4", pos4);
             telemetry.update();
+
+
+
+
 
         }
 

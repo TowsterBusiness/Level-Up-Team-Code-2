@@ -27,10 +27,10 @@ public class CloseBlue extends LinearOpMode {
     DistanceSensor ds;
     @Override
     public void runOpMode() throws InterruptedException {
-        backleftDrive = hardwareMap.get(DcMotor.class, "frontLeft");
-        backrightDrive = hardwareMap.get(DcMotor.class, "backRight");
-        frontleftDrive = hardwareMap.get(DcMotor.class, "backLeft");
-        frontrightDrive = hardwareMap.get(DcMotor.class, "frontRight");
+        backleftDrive = hardwareMap.get(DcMotor.class, "leftFront");
+        backrightDrive = hardwareMap.get(DcMotor.class, "rightRear");
+        frontleftDrive = hardwareMap.get(DcMotor.class, "leftRear");
+        frontrightDrive = hardwareMap.get(DcMotor.class, "leftFront");
         ds = hardwareMap.get(DistanceSensor.class, "ds");
         arm1 = hardwareMap.get(DcMotor.class, "baseArm");
         arm2 = hardwareMap.get(DcMotor.class, "floatingArm");

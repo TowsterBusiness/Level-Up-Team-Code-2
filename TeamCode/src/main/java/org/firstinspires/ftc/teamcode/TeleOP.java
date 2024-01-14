@@ -27,7 +27,10 @@ public class TeleOP extends OpMode {
     ButtonToggle clawToggle = new ButtonToggle();
     Servo clawHinge;
     Servo droneHinge;
+    Servo droneSafety;
+    float droneSafetyPos = 0;
     float clawHingePosition = 0;
+
     public IMU imu;
 
     boolean isClawOpen = false;
@@ -63,6 +66,7 @@ public class TeleOP extends OpMode {
         claw = hardwareMap.get(Servo.class, "claw");
         clawHinge = hardwareMap.get(Servo.class, "clawHinge");
         droneHinge = hardwareMap.get(Servo.class, "droneHinge");
+        droneSafety = hardwareMap.get(Servo.class, "droneSafety");
         droneHinge.setPosition(0.7);
 
         backleftDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -141,15 +145,13 @@ public class TeleOP extends OpMode {
         double coefficientArm = 1;
         if(gamepad1.right_trigger < 0.5)
         {
-            telemetry.addData("Yeet Mode", "off");
+            telemetry.addData("Speed Mode", "off");
         }
         else
         {
-            telemetry.addData("YeetMode", "trigger on");
+            telemetry.addData("Speed Mode", "trigger on");
             coefficient = 1;
         }
-
-        telemetry.addData("Front Left Power", frontleftPower * coefficient);
 
         backrightDrive.setPower(backrightPower * coefficient);
         backleftDrive.setPower(backleftPower * coefficient);
@@ -160,7 +162,6 @@ public class TeleOP extends OpMode {
         clawHingePosition += gamepad2.right_stick_y * 0.005;
 
         // Claw Movement
-        clawToggle.update(gamepad2.a);
         float clawOpenPosition = 0.1f;
         float clawClosedPosition = 0.38f;
         if (gamepad2.a) {
@@ -169,35 +170,43 @@ public class TeleOP extends OpMode {
             claw.setPosition(clawClosedPosition);
         }
 
+        telemetry.addData("claw pos", claw.getPosition());
+
 
         if (gamepad2.x) {
-            armAngle1 = 1275;
-            armAngle2 = 3197;
-            clawHingePosition = 0.437f;
+            armAngle1 = 1523;
+            armAngle2 = 3250;
+            clawHingePosition = 0.4079f;
         } else if (gamepad2.y) {
-            armAngle1 = 2461;
-            armAngle2 = 2287;
+            armAngle1 = 0;//2187;
+            armAngle2 = 0;//2548;
             clawHingePosition = 0f;
         } else if (gamepad2.b) {
-            armAngle1 = 1350;
-            armAngle2 = 1333;
-            clawHingePosition = 0.44f;
+            armAngle1 = 1933;//1939; // 1933 NOTE: Check which is better
+            armAngle2 = 557;//612; // 557
+            clawHingePosition = 0f;
         } else if (gamepad2.dpad_up) {
             armAngle1 = 1357;
             armAngle2 = 1282;
             clawHingePosition = 0.44f;
         } else if (gamepad2.dpad_down) {
-            armAngle1 = 668;
-            armAngle2 = 708;
+            arm1.setPower(1);
+            arm2.setPower(1);
+            armAngle1 = 226;
+            armAngle2 = 386;
         } else if (gamepad2.left_trigger > 0.5) {
             droneHinge.setPosition(0.2);
         }
 
-        telemetry.addData("drone pos: ", droneHinge.getPosition());
+        droneSafetyPos += gamepad2.left_stick_y * 0.2;
+        droneSafety.setPosition(droneSafetyPos);
+        telemetry.addData("drone safety pos", droneSafetyPos);
+
 
         arm1.setTargetPosition((int) armAngle1);
         arm2.setTargetPosition((int) armAngle2);
 
+        telemetry.addData("drone pos: ", droneHinge.getPosition());
         telemetry.addData("arm1 en", arm1.getCurrentPosition());
         telemetry.addData("arm2 en", arm2.getCurrentPosition());
 

@@ -12,10 +12,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.utils.RobotMovement;
 import org.firstinspires.ftc.teamcode.utils.RobotPositionAccessor;
 
@@ -25,6 +28,7 @@ public class FarBlueRR extends OpMode {
         TRY1,
         PLACE_PIXEL1,
         PLACE_PIXEL2,
+        PLACE_PIXEL3,
         TRY2
     }
 
@@ -33,15 +37,22 @@ public class FarBlueRR extends OpMode {
     Servo clawHinge;
     DcMotor arm1;
     DcMotor arm2;
-    double[] armPosition = { 0, 0, 0 };
+    double[] armPosition = {0, 0, 0};
     DistanceSensor ds;
     SampleMecanumDrive drive;
     double min = 99999999;
     double min2 = 99999999;
 
-    Trajectory trajectory;
-    Trajectory placePixel1;
-    Trajectory trajectory2;
+    TrajectorySequence trajectory;
+    TrajectorySequence placePixel1;
+    TrajectorySequence trajectory2;
+
+    TrajectorySequence placePixel2;
+
+    TrajectorySequence placePixel3;
+
+    ElapsedTime et = new ElapsedTime();
+
 
     @Override
     public void init() {
@@ -51,10 +62,10 @@ public class FarBlueRR extends OpMode {
 
         arm1 = hardwareMap.get(DcMotor.class, "baseArm");
         arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
-        arm1.setPower(0.3);
-        arm2.setPower(0.3);
+        arm1.setPower(0.5);
+        arm2.setPower(0.5);
         arm1.setTargetPosition((int) armPosition[0]);
-        arm2.setTargetPosition((int) armPosition[0]);
+        arm2.setTargetPosition((int) armPosition[1]);
         arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -67,50 +78,76 @@ public class FarBlueRR extends OpMode {
 
         claw.setPosition(0.38);
 
-
-
-        trajectory = drive.trajectoryBuilder(new Pose2d(0, 0, Math.toRadians(180)))
-                .splineToConstantHeading(new Vector2d(10, 24), Math.toRadians(-90))
+        trajectory = drive.trajectorySequenceBuilder(new Pose2d())
+                .lineTo(new Vector2d(-10, -24))
+                .lineTo(new Vector2d(-10, -30))
+                .waitSeconds(0.3)
                 .addDisplacementMarker(() -> {
-                    state = States.TRY1;
-                })
-                .strafeLeft(12)
-                .addDisplacementMarker(() -> {
+                    min = Math.min(ds.getDistance(DistanceUnit.CM), min);
                     if (min <= 10) {
-                        drive.followTrajectoryAsync(placePixel1);
+                        drive.followTrajectorySequenceAsync(placePixel1);
                     } else {
-                        drive.followTrajectoryAsync(trajectory2);
+                        drive.followTrajectorySequenceAsync(trajectory2);
                     }
                 })
                 .build();
 
-        placePixel1 = drive.trajectoryBuilder(trajectory.end())
-                .strafeRight(10)
+        placePixel1 = drive.trajectorySequenceBuilder(trajectory.end())
+                .strafeLeft(18)
                 .addDisplacementMarker(() -> {
                     state = States.PLACE_PIXEL1;
                 })
                 .build();
 
-        trajectory2 = drive.trajectoryBuilder(trajectory.end())
-                .splineToConstantHeading(new Vector2d(0, 68.58), 0)
+        trajectory2 = drive.trajectorySequenceBuilder(trajectory.end())
+                .lineTo(new Vector2d(0, -30))
+                .lineTo(new Vector2d(0, -36))
+                .addDisplacementMarker(() -> {
+                    min2 = Math.min(ds.getDistance(DistanceUnit.CM), min);
+                    if (min <= 16) {
+                        drive.followTrajectorySequenceAsync(placePixel2);
+                    } else {
+                        drive.followTrajectorySequenceAsync(placePixel3);
+                    }
+                })
                 .build();
 
-        drive.followTrajectoryAsync(trajectory);
+        placePixel2 = drive.trajectorySequenceBuilder(trajectory2.end())
+                .lineTo(new Vector2d(-5, -34))
+                .addDisplacementMarker(() -> {
+                    state = States.PLACE_PIXEL1;
+                })
+                .build();
+
+        placePixel3 = drive.trajectorySequenceBuilder(trajectory2.end())
+                .lineToLinearHeading(new Pose2d(0, -27, Math.toRadians(65)))
+                .addDisplacementMarker(() -> {
+                    et.reset();
+                    state = States.PLACE_PIXEL1;
+                })
+                .build();
+
+        drive.followTrajectorySequenceAsync(trajectory);
     }
 
     @Override
     public void loop() {
-        if (state == States.TRY1) {
-            min = Math.min(ds.getDistance(DistanceUnit.CM), min);
-        } else if (state == States.TRY2) {
-            min2 = Math.min(ds.getDistance(DistanceUnit.CM), min2);
-        } else if (state == States.PLACE_PIXEL1) {
-            armPosition = new double[] {1185, 3522, 0.408};
-
-            if (!arm1.isBusy() && !arm2.isBusy()) {
-                claw.setPosition(0.65);
+        if (state == States.PLACE_PIXEL1) {
+            telemetry.addData("hi", true);
+            armPosition[0] = 1275;
+            armPosition[1] = 3197;
+            armPosition[2] = 0.437f;
+            if (et.milliseconds() > 3000) {
+                claw.setPosition(0.1);
             }
+        } else if (state == States.PLACE_PIXEL2) {
+            claw.setPosition(0.1);
         }
+
+        telemetry.addData("arm pos 1", armPosition[0]);
+        telemetry.addData("arm pos 2", armPosition[1]);
+        telemetry.addData("arm pos 3", armPosition[2]);
+        telemetry.addData("et", et.milliseconds());
 
         arm1.setTargetPosition((int) armPosition[0]);
         arm2.setTargetPosition((int) armPosition[1]);
@@ -121,6 +158,113 @@ public class FarBlueRR extends OpMode {
         drive.update();
         telemetry.update();
     }
+
+//    @Override
+//    public void init() {
+//        Telemetry telemetry = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+//
+//        drive = new SampleMecanumDrive(hardwareMap);
+//
+//        arm1 = hardwareMap.get(DcMotor.class, "baseArm");
+//        arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
+//        arm1.setPower(0.5);
+//        arm2.setPower(0.5);
+//        arm1.setTargetPosition((int) armPosition[0]);
+//        arm2.setTargetPosition((int) armPosition[1]);
+//        arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//
+//        arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//
+//        claw = hardwareMap.get(Servo.class, "claw");
+//        clawHinge = hardwareMap.get(Servo.class, "clawHinge");
+//        ds = hardwareMap.get(DistanceSensor.class, "ds");
+//
+//        claw.setPosition(0.38);
+//
+//
+//
+//        trajectory = drive.trajectorySequenceBuilder(new Pose2d())
+//                .lineTo(new Vector2d(10, -24))
+//                .lineTo(new Vector2d(10, -30))
+//                .waitSeconds(0.3)
+//                .addDisplacementMarker(() -> {
+//                    min = Math.min(ds.getDistance(DistanceUnit.CM), min);
+//                    if (min <= 10) {
+//                        drive.followTrajectorySequenceAsync(placePixel1);
+//                    } else {
+//                        drive.followTrajectorySequenceAsync(trajectory2);
+//                    }
+//                })
+//                .build();
+//
+//        placePixel1 = drive.trajectorySequenceBuilder(trajectory.end())
+//                .strafeLeft(18)
+//                .addDisplacementMarker(() -> {
+//                    state = States.PLACE_PIXEL1;
+//                })
+//                .build();
+//
+//        trajectory2 = drive.trajectorySequenceBuilder(trajectory.end())
+//                .lineTo(new Vector2d(0, -30))
+//                .lineTo(new Vector2d(0, -34))
+//                .addDisplacementMarker(() -> {
+//                    min2 = Math.min(ds.getDistance(DistanceUnit.CM), min);
+//                    if (min <= 10) {
+//                        drive.followTrajectorySequenceAsync(placePixel2);
+//                    } else {
+//                        drive.followTrajectorySequenceAsync(placePixel3);
+//                    }
+//                })
+//                .build();
+//
+//        placePixel2 = drive.trajectorySequenceBuilder(trajectory2.end())
+//                .lineTo(new Vector2d(5, -34))
+//                .addDisplacementMarker(() -> {
+//                    state = States.PLACE_PIXEL1;
+//                })
+//                .build();
+//
+//        placePixel3 = drive.trajectorySequenceBuilder(trajectory2.end())
+//                .lineToLinearHeading(new Pose2d(0, -30, Math.toRadians(-65)))
+//                .addDisplacementMarker(() -> {
+//                    et.reset();
+//                    state = States.PLACE_PIXEL1;
+//                })
+//                .build();
+//
+//        drive.followTrajectorySequenceAsync(trajectory);
+//    }
+//
+//    @Override
+//    public void loop() {
+//        if (state == States.PLACE_PIXEL1) {
+//            telemetry.addData("hi", true);
+//            armPosition[0] = 1275;
+//            armPosition[1] = 3197;
+//            armPosition[2] = 0.437f;
+//            if (et.milliseconds() > 3000) {
+//                claw.setPosition(0.1);
+//            }
+//        } else if (state == States.PLACE_PIXEL2) {
+//            claw.setPosition(0.1);
+//        }
+//
+//        telemetry.addData("arm pos 1", armPosition[0]);
+//        telemetry.addData("arm pos 2", armPosition[1]);
+//        telemetry.addData("arm pos 3", armPosition[2]);
+//        telemetry.addData("et", et.milliseconds());
+//
+//        arm1.setTargetPosition((int) armPosition[0]);
+//        arm2.setTargetPosition((int) armPosition[1]);
+//        clawHinge.setPosition(armPosition[2]);
+//
+//        telemetry.addData("Min", min);
+//        telemetry.addData("Min2", min2);
+//        drive.update();
+//        telemetry.update();
+//    }
 
     //
 //        waitForStart();
