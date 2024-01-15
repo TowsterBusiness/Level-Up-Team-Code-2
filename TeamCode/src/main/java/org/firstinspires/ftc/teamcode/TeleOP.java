@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,8 +10,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.utils.ButtonToggle;
 import org.firstinspires.ftc.teamcode.utils.PIDController;
+import org.firstinspires.ftc.teamcode.utils.RobotStatics;
 import org.firstinspires.ftc.teamcode.utils.Vector2D;
 
 @TeleOp(name = "teleop")
@@ -23,8 +22,6 @@ public class TeleOP extends OpMode {
     DcMotor frontrightDrive;
 
     Servo claw;
-    float clawPosition = 0;
-    ButtonToggle clawToggle = new ButtonToggle();
     Servo clawHinge;
     Servo droneHinge;
     Servo droneSafety;
@@ -33,15 +30,12 @@ public class TeleOP extends OpMode {
 
     public IMU imu;
 
-    boolean isClawOpen = false;
-
     public double angle;
 
     public DcMotor arm1;
     public DcMotor arm2;
 
-    public double armAngle1 = 0;
-    public double armAngle2 = 0;
+    public double[] armPosition = RobotStatics.RESET.clone();
 
     PIDController pid1 = new PIDController(0.8f, 0f, 0f);
     PIDController pid2 = new PIDController(0.8f, 0f, 0f);
@@ -82,8 +76,8 @@ public class TeleOP extends OpMode {
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        arm1.setTargetPosition((int) armAngle1);
-        arm2.setTargetPosition((int) armAngle2);
+        arm1.setTargetPosition((int) armPosition[0]);
+        arm2.setTargetPosition((int) armPosition[1]);
         arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm1.setPower(0.5);
@@ -114,8 +108,7 @@ public class TeleOP extends OpMode {
             imu.initialize(parameters);
         }
         if (gamepad1.back) {
-            armAngle1 = 0;
-            armAngle2 = 0;
+            armPosition = RobotStatics.RESET.clone();
         }
 
         YawPitchRollAngles robotOrientation = imu.getRobotYawPitchRollAngles();
@@ -142,7 +135,6 @@ public class TeleOP extends OpMode {
 
         // pressurising the right trigger slows down the drive train
         double coefficient = 0.35;
-        double coefficientArm = 1;
         if(gamepad1.right_trigger < 0.5)
         {
             telemetry.addData("Speed Mode", "off");
@@ -162,55 +154,46 @@ public class TeleOP extends OpMode {
         clawHingePosition += gamepad2.right_stick_y * 0.005;
 
         // Claw Movement
-        float clawOpenPosition = 0.1f;
-        float clawClosedPosition = 0.38f;
         if (gamepad2.a) {
-            claw.setPosition(clawOpenPosition);
+            claw.setPosition(RobotStatics.clawOpenPos);
         } else {
-            claw.setPosition(clawClosedPosition);
+            claw.setPosition(RobotStatics.clawClosedPos);
         }
 
         telemetry.addData("claw pos", claw.getPosition());
 
-
+        // converting controller commands into arm positions
         if (gamepad2.x) {
-            armAngle1 = 1523;
-            armAngle2 = 3250;
-            clawHingePosition = 0.4079f;
+            armPosition = RobotStatics.PICKUP.clone();
         } else if (gamepad2.y) {
-            armAngle1 = 0;//2187;
-            armAngle2 = 0;//2548;
-            clawHingePosition = 0f;
+            armPosition = RobotStatics.PLACE.clone();
         } else if (gamepad2.b) {
-            armAngle1 = 1933;//1939; // 1933 NOTE: Check which is better
-            armAngle2 = 557;//612; // 557
-            clawHingePosition = 0f;
+            armPosition = RobotStatics.TRUSS.clone();
         } else if (gamepad2.dpad_up) {
-            armAngle1 = 1357;
-            armAngle2 = 1282;
-            clawHingePosition = 0.44f;
+            armPosition = RobotStatics.HANG_START.clone();
         } else if (gamepad2.dpad_down) {
             arm1.setPower(1);
             arm2.setPower(1);
-            armAngle1 = 226;
-            armAngle2 = 386;
+            armPosition = RobotStatics.HANG_END.clone();
         } else if (gamepad2.left_trigger > 0.5) {
             droneHinge.setPosition(0.2);
         }
 
+        // drone safety testing
         droneSafetyPos += gamepad2.left_stick_y * 0.2;
         droneSafety.setPosition(droneSafetyPos);
         telemetry.addData("drone safety pos", droneSafetyPos);
 
-
-        arm1.setTargetPosition((int) armAngle1);
-        arm2.setTargetPosition((int) armAngle2);
+        // setting final arm positions
+        arm1.setTargetPosition((int) armPosition[0]);
+        arm2.setTargetPosition((int) armPosition[1]);
+        clawHinge.setPosition(armPosition[2]);
 
         telemetry.addData("drone pos: ", droneHinge.getPosition());
         telemetry.addData("arm1 en", arm1.getCurrentPosition());
         telemetry.addData("arm2 en", arm2.getCurrentPosition());
-
-        clawHinge.setPosition(clawHingePosition);
+        telemetry.addData("claw hinge Pos", claw.getPosition());
+        
         telemetry.update();
 
     }
