@@ -20,11 +20,7 @@ import org.firstinspires.ftc.teamcode.utils.RobotStatics;
 @Autonomous(name = "Far Blue RR")
 public class FarBlueRR extends OpMode {
     enum States {
-        TRY1,
-        PLACE_PIXEL1,
-        PLACE_PIXEL2,
-        PLACE_PIXEL3,
-        TRY2
+        PLACE_PIXEL,
     }
 
     States state = null;
@@ -125,13 +121,13 @@ public class FarBlueRR extends OpMode {
     }
 
     public void placePixel() {
-        state = States.PLACE_PIXEL1;
+        state = States.PLACE_PIXEL;
         armPosition = RobotStatics.PLACE.clone();
     }
 
     @Override
     public void loop() {
-        if (state == States.PLACE_PIXEL1) {
+        if (state == States.PLACE_PIXEL) {
             if (et.milliseconds() > 3000) {
                 claw.setPosition(RobotStatics.clawOpenPos);
             }
