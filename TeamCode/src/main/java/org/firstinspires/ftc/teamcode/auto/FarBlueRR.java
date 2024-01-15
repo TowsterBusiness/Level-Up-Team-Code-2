@@ -4,12 +4,9 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -18,9 +15,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
-import org.firstinspires.ftc.teamcode.utils.RobotMovement;
-import org.firstinspires.ftc.teamcode.utils.RobotPositionAccessor;
+import org.firstinspires.ftc.teamcode.utils.RobotStatics;
 
 @Autonomous(name = "Far Blue RR")
 public class FarBlueRR extends OpMode {
@@ -40,15 +35,13 @@ public class FarBlueRR extends OpMode {
     double[] armPosition = {0, 0, 0};
     DistanceSensor ds;
     SampleMecanumDrive drive;
-    double min = 99999999;
-    double min2 = 99999999;
+    double distance1 = Double.POSITIVE_INFINITY;
+    double distance2 = Double.POSITIVE_INFINITY;
 
     TrajectorySequence trajectory;
     TrajectorySequence placePixel1;
     TrajectorySequence trajectory2;
-
     TrajectorySequence placePixel2;
-
     TrajectorySequence placePixel3;
 
     ElapsedTime et = new ElapsedTime();
@@ -78,13 +71,13 @@ public class FarBlueRR extends OpMode {
 
         claw.setPosition(0.38);
 
-        trajectory = drive.trajectorySequenceBuilder(new Pose2d())
-                .lineTo(new Vector2d(-10, -24))
+        trajectory = drive.trajectorySequenceBuilder(new Pose2d(0, 0, Math.toRadians(180)))
+                .splineToConstantHeading(new Vector2d(-10, -24), Math.toRadians(270))
                 .lineTo(new Vector2d(-10, -30))
                 .waitSeconds(0.3)
                 .addDisplacementMarker(() -> {
-                    min = Math.min(ds.getDistance(DistanceUnit.CM), min);
-                    if (min <= 10) {
+                    distance1 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
+                    if (distance1 <= 10) {
                         drive.followTrajectorySequenceAsync(placePixel1);
                     } else {
                         drive.followTrajectorySequenceAsync(trajectory2);
@@ -93,18 +86,19 @@ public class FarBlueRR extends OpMode {
                 .build();
 
         placePixel1 = drive.trajectorySequenceBuilder(trajectory.end())
-                .strafeLeft(18)
+                .lineTo(new Vector2d(-10, -24))
                 .addDisplacementMarker(() -> {
-                    state = States.PLACE_PIXEL1;
+                    placePixel();
                 })
                 .build();
 
         trajectory2 = drive.trajectorySequenceBuilder(trajectory.end())
-                .lineTo(new Vector2d(0, -30))
+                .splineToConstantHeading(new Vector2d(0, -30), Math.toRadians(270))
+                .setTangent(Math.toRadians(90))
                 .lineTo(new Vector2d(0, -36))
                 .addDisplacementMarker(() -> {
-                    min2 = Math.min(ds.getDistance(DistanceUnit.CM), min);
-                    if (min <= 16) {
+                    distance2 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
+                    if (distance1 <= 16) {
                         drive.followTrajectorySequenceAsync(placePixel2);
                     } else {
                         drive.followTrajectorySequenceAsync(placePixel3);
@@ -115,46 +109,42 @@ public class FarBlueRR extends OpMode {
         placePixel2 = drive.trajectorySequenceBuilder(trajectory2.end())
                 .lineTo(new Vector2d(-5, -34))
                 .addDisplacementMarker(() -> {
-                    state = States.PLACE_PIXEL1;
+                    placePixel();
                 })
                 .build();
 
         placePixel3 = drive.trajectorySequenceBuilder(trajectory2.end())
-                .lineToLinearHeading(new Pose2d(0, -27, Math.toRadians(65)))
+                .lineToLinearHeading(new Pose2d(0, -27, Math.toRadians(270)))
                 .addDisplacementMarker(() -> {
                     et.reset();
-                    state = States.PLACE_PIXEL1;
+                    placePixel();
                 })
                 .build();
 
         drive.followTrajectorySequenceAsync(trajectory);
     }
 
+    public void placePixel() {
+        state = States.PLACE_PIXEL1;
+        armPosition = RobotStatics.PLACE.clone();
+    }
+
     @Override
     public void loop() {
         if (state == States.PLACE_PIXEL1) {
-            telemetry.addData("hi", true);
-            armPosition[0] = 1275;
-            armPosition[1] = 3197;
-            armPosition[2] = 0.437f;
             if (et.milliseconds() > 3000) {
-                claw.setPosition(0.1);
+                claw.setPosition(RobotStatics.clawOpenPos);
             }
-        } else if (state == States.PLACE_PIXEL2) {
-            claw.setPosition(0.1);
         }
 
-        telemetry.addData("arm pos 1", armPosition[0]);
-        telemetry.addData("arm pos 2", armPosition[1]);
-        telemetry.addData("arm pos 3", armPosition[2]);
         telemetry.addData("et", et.milliseconds());
 
         arm1.setTargetPosition((int) armPosition[0]);
         arm2.setTargetPosition((int) armPosition[1]);
         clawHinge.setPosition(armPosition[2]);
 
-        telemetry.addData("Min", min);
-        telemetry.addData("Min2", min2);
+        telemetry.addData("distance 1", distance1);
+        telemetry.addData("distance 2", distance2);
         drive.update();
         telemetry.update();
     }
