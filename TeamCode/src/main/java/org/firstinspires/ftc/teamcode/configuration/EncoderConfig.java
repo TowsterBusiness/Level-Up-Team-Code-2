@@ -54,11 +54,6 @@ public class EncoderConfig extends LinearOpMode {
         claw = hardwareMap.get(Servo.class, "claw");
         clawHinge = hardwareMap.get(Servo.class, "clawHinge");
 
-        backleftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backrightDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontleftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontrightDrive.setDirection(DcMotor.Direction.FORWARD);
-
         backleftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backrightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontleftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

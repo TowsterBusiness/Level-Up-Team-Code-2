@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -22,11 +23,13 @@ public class TeleOP extends OpMode {
     DcMotor frontrightDrive;
 
     Servo claw;
+    Servo claw2;
     Servo clawHinge;
     Servo droneHinge;
     Servo droneSafety;
     float droneSafetyPos = 0;
     float clawHingePosition = 0;
+    float clawHingePosition2 = 0;
 
     public IMU imu;
 
@@ -58,10 +61,12 @@ public class TeleOP extends OpMode {
         arm1 = hardwareMap.get(DcMotor.class, "baseArm");
         arm2 = hardwareMap.get(DcMotor.class, "floatingArm");
         claw = hardwareMap.get(Servo.class, "claw");
+        claw2 = hardwareMap.get(Servo.class, "claw2");
         clawHinge = hardwareMap.get(Servo.class, "clawHinge");
         droneHinge = hardwareMap.get(Servo.class, "droneHinge");
         droneSafety = hardwareMap.get(Servo.class, "droneSafety");
-        droneHinge.setPosition(0.7);
+        droneHinge.setPosition(RobotStatics.droneClosed);
+        droneSafety.setPosition(RobotStatics.droneSafetyClosed);
 
         backleftDrive.setDirection(DcMotor.Direction.REVERSE);
         backrightDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -81,7 +86,8 @@ public class TeleOP extends OpMode {
         arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm1.setPower(0.5);
-        arm2.setPower(0.5);
+
+        clawHinge.setPosition(armPosition[2]);
 
         imu = hardwareMap.get(IMU.class, "imu");
 
@@ -150,14 +156,16 @@ public class TeleOP extends OpMode {
         frontrightDrive.setPower(frontrightPower * coefficient);
         frontleftDrive.setPower(frontleftPower * coefficient);
 
-        // clawHinge Movement
-        clawHingePosition += gamepad2.right_stick_y * 0.005;
-
         // Claw Movement
-        if (gamepad2.a) {
-            claw.setPosition(RobotStatics.clawOpenPos);
-        } else {
+        if (!gamepad2.left_bumper) {
             claw.setPosition(RobotStatics.clawClosedPos);
+        } else {
+            claw.setPosition(RobotStatics.clawOpenPos);
+        }
+        if (!gamepad2.right_bumper) {
+            claw2.setPosition(RobotStatics.claw2ClosedPos);
+        } else {
+            claw2.setPosition(RobotStatics.claw2OpenPos);
         }
 
         telemetry.addData("claw pos", claw.getPosition());
@@ -166,9 +174,9 @@ public class TeleOP extends OpMode {
         if (gamepad2.x) {
             armPosition = RobotStatics.PICKUP.clone();
         } else if (gamepad2.y) {
-            armPosition = RobotStatics.PLACE.clone();
-        } else if (gamepad2.b) {
             armPosition = RobotStatics.TRUSS.clone();
+        } else if (gamepad2.b) {
+            armPosition = RobotStatics.PLACE.clone();
         } else if (gamepad2.dpad_up) {
             armPosition = RobotStatics.HANG_START.clone();
         } else if (gamepad2.dpad_down) {
@@ -176,12 +184,10 @@ public class TeleOP extends OpMode {
             arm2.setPower(1);
             armPosition = RobotStatics.HANG_END.clone();
         } else if (gamepad2.left_trigger > 0.5) {
-            droneHinge.setPosition(0.2);
+            droneHinge.setPosition(RobotStatics.droneOpen);
+            droneSafety.setPosition(RobotStatics.droneSafetyOpen);
         }
 
-        // drone safety testing
-        droneSafetyPos += gamepad2.left_stick_y * 0.2;
-        droneSafety.setPosition(droneSafetyPos);
         telemetry.addData("drone safety pos", droneSafetyPos);
 
         // setting final arm positions

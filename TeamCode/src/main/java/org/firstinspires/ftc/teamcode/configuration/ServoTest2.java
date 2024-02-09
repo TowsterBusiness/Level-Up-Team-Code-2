@@ -18,7 +18,7 @@ public class ServoTest2 extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            pos += gamepad1.left_stick_x * 0.05;
+            pos += gamepad1.left_stick_x * 0.001;
             if (gamepad1.dpad_up) {
                 pos = 0;
             }
