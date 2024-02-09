@@ -69,62 +69,65 @@ public class FarBlueRR extends OpMode {
         claw.setPosition(RobotStatics.clawClosedPos);
         claw2.setPosition(RobotStatics.claw2ClosedPos);
 
-        drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(180)));
+        drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
 
-        trajectory = drive.trajectorySequenceBuilder(new Pose2d(0, 0, Math.toRadians(180)))
-                .splineToConstantHeading(new Vector2d(-10, -24), Math.toRadians(270))
-                .lineTo(new Vector2d(-10, 30))
+        trajectory = drive.trajectorySequenceBuilder(new Pose2d(-36, 61, Math.toRadians(0)))
+                .setTangent(Math.toRadians(180))
+                .splineToConstantHeading(new Vector2d(-46, 37), Math.toRadians(270))
+                .lineTo(new Vector2d(-46, 31))
                 .waitSeconds(0.3)
                 .addDisplacementMarker(() -> {
                     distance1 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
-//                    if (distance1 <= 10) {
-//                        drive.followTrajectorySequenceAsync(placePixel1);
-//                    } else {
-//                        drive.followTrajectorySequenceAsync(trajectory2);
-//                    }
+                    if (distance1 <= 10) {
+                        drive.followTrajectorySequenceAsync(placePixel1);
+                    } else {
+                        drive.followTrajectorySequenceAsync(trajectory2);
+                    }
                 })
                 .build();
 
-//        placePixel1 = drive.trajectorySequenceBuilder(trajectory.end())
-//                .lineTo(new Vector2d(-10, -24))
-//                .addDisplacementMarker(() -> {
-//                    placePixel();
-//                })
-//                .build();
-//
-//        trajectory2 = drive.trajectorySequenceBuilder(trajectory.end())
-//                .splineToConstantHeading(new Vector2d(0, -30), Math.toRadians(270))
-//                .setTangent(Math.toRadians(90))
-//                .lineTo(new Vector2d(0, -36))
-//                .addDisplacementMarker(() -> {
-//                    distance2 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
-//                    if (distance2 <= 16) {
-//                        drive.followTrajectorySequenceAsync(placePixel2);
-//                    } else {
-//                        drive.followTrajectorySequenceAsync(placePixel3);
-//                    }
-//                })
-//                .build();
-//
-//        placePixel2 = drive.trajectorySequenceBuilder(trajectory2.end())
-//                .lineTo(new Vector2d(-5, -34))
-//                .addDisplacementMarker(() -> {
-//                    placePixel();
-//                })
-//                .build();
-//
-//        placePixel3 = drive.trajectorySequenceBuilder(trajectory2.end())
-//                .lineToLinearHeading(new Pose2d(0, -27, Math.toRadians(270)))
-//                .addDisplacementMarker(() -> {
-//                    et.reset();
-//                    placePixel();
-//                })
-//                .build();
+        placePixel1 = drive.trajectorySequenceBuilder(trajectory.end())
+                .lineTo(new Vector2d(-46, 37))
+                .addDisplacementMarker(() -> {
+                    placePixel();
+                })
+                .build();
+
+        trajectory2 = drive.trajectorySequenceBuilder(trajectory.end())
+                .setTangent(Math.toRadians(90))
+                .splineToConstantHeading(new Vector2d(-36, 31), Math.toRadians(270))
+                .lineTo(new Vector2d(-36, 25))
+                .addDisplacementMarker(() -> {
+                    distance2 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
+                    if (distance2 <= 16) {
+                        drive.followTrajectorySequenceAsync(placePixel2);
+                    } else {
+                        drive.followTrajectorySequenceAsync(placePixel3);
+                    }
+                })
+                .build();
+
+        placePixel2 = drive.trajectorySequenceBuilder(trajectory2.end())
+                .setTangent(90)
+                .lineTo(new Vector2d(-36, 30))
+                .splineToConstantHeading(new Vector2d(-40.5, 30), Math.toRadians(270))
+                .addDisplacementMarker(() -> {
+                    placePixel();
+                })
+                .build();
+
+        placePixel3 = drive.trajectorySequenceBuilder(trajectory2.end())
+                .lineToLinearHeading(new Pose2d(-35.5, 33.5, Math.toRadians(90)))
+                .addDisplacementMarker(() -> {
+                    placePixel();
+                })
+                .build();
 
         drive.followTrajectorySequenceAsync(trajectory);
     }
 
     public void placePixel() {
+        et.reset();
         state = States.PLACE_PIXEL;
         armPosition = RobotStatics.PLACE.clone();
     }
