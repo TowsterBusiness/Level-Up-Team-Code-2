@@ -69,12 +69,12 @@ public class FarRedRR extends OpMode {
         claw2.setPosition(RobotStatics.claw2ClosedPos);
         clawHinge.setPosition(armPosition[2]);
 
-        drive.setPoseEstimate(new Pose2d(-36, 61, Math.toRadians(0)));
+        drive.setPoseEstimate(new Pose2d(-36, -61, Math.toRadians(0)));
 
-        trajectory = drive.trajectorySequenceBuilder(new Pose2d(-36, 61, Math.toRadians(0)))
+        trajectory = drive.trajectorySequenceBuilder(new Pose2d(-36, -61, Math.toRadians(0)))
                 .setTangent(Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(-44, 37), Math.toRadians(270))
-                .lineTo(new Vector2d(-44, 27))
+                .splineToConstantHeading(new Vector2d(-44, -37), Math.toRadians(90))
+                .lineTo(new Vector2d(-44, -27))
                 .waitSeconds(0.3)
                 .addDisplacementMarker(() -> {
                     distance1 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
@@ -87,17 +87,17 @@ public class FarRedRR extends OpMode {
                 .build();
 
         placePixel1 = drive.trajectorySequenceBuilder(trajectory.end())
-                .setTangent(90)
-                .splineToConstantHeading(new Vector2d(-47.5, 43.5), Math.toRadians(270))
+                .setTangent(270)
+                .splineToConstantHeading(new Vector2d(-47.5, -43.5), Math.toRadians(180))
                 .addDisplacementMarker(() -> {
                     placePixel();
                 })
                 .build();
 
         trajectory2 = drive.trajectorySequenceBuilder(trajectory.end())
-                .setTangent(Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(-39, 31), Math.toRadians(270))
-                .lineTo(new Vector2d(-39, 15))
+                .setTangent(Math.toRadians(270))
+                .splineToConstantHeading(new Vector2d(-39, -31), Math.toRadians(90))
+                .lineTo(new Vector2d(-39, -15))
                 .waitSeconds(3)
                 .addDisplacementMarker(() -> {
                     distance2 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
@@ -111,15 +111,15 @@ public class FarRedRR extends OpMode {
 
         placePixel2 = drive.trajectorySequenceBuilder(trajectory2.end())
                 .setTangent(90)
-                .lineTo(new Vector2d(-36, 30))
-                .splineToConstantHeading(new Vector2d(-52, 21), Math.toRadians(270))
+                .lineTo(new Vector2d(-36, -30))
+                .splineToConstantHeading(new Vector2d(-52, -21), Math.toRadians(90))
                 .addDisplacementMarker(() -> {
                     placePixel();
                 })
                 .build();
 
         placePixel3 = drive.trajectorySequenceBuilder(trajectory2.end())
-                .lineToLinearHeading(new Pose2d(-42.5, 22.5, Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(-42.5, -22.5, Math.toRadians(270)))
                 .addDisplacementMarker(() -> {
                     placePixel();
                 })
