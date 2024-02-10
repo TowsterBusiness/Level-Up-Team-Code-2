@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.utils;
 public class RobotStatics {
-  public final static double[] PICKUP = { 3315, 1613, 0.9224f };
-  public final static double[] PLACE = { 0, 0, 1 };
+  public final static double[] PICKUP = { 3241, 1266, 0.902};
+  public final static double[] PLACE = { 535, 1875, 0.52};
   public final static double[] TRUSS = { 2318, 2501, 0.449 };
   public final static double[] HANG_START = { 1357, 1282, 0.449 };
   public final static double[] HANG_END = { 226, 386, 0.449 };

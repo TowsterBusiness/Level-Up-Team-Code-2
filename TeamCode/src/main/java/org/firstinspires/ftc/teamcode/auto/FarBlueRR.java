@@ -57,7 +57,6 @@ public class FarBlueRR extends OpMode {
         arm2.setTargetPosition((int) armPosition[1]);
         arm1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         arm2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         arm1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         arm2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -68,13 +67,14 @@ public class FarBlueRR extends OpMode {
 
         claw.setPosition(RobotStatics.clawClosedPos);
         claw2.setPosition(RobotStatics.claw2ClosedPos);
+        clawHinge.setPosition(armPosition[2]);
 
-        drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
+        drive.setPoseEstimate(new Pose2d(-36, 61, Math.toRadians(0)));
 
         trajectory = drive.trajectorySequenceBuilder(new Pose2d(-36, 61, Math.toRadians(0)))
                 .setTangent(Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(-46, 37), Math.toRadians(270))
-                .lineTo(new Vector2d(-46, 31))
+                .splineToConstantHeading(new Vector2d(-44, 37), Math.toRadians(270))
+                .lineTo(new Vector2d(-44, 27))
                 .waitSeconds(0.3)
                 .addDisplacementMarker(() -> {
                     distance1 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
@@ -87,7 +87,8 @@ public class FarBlueRR extends OpMode {
                 .build();
 
         placePixel1 = drive.trajectorySequenceBuilder(trajectory.end())
-                .lineTo(new Vector2d(-46, 37))
+                .setTangent(90)
+                .splineToConstantHeading(new Vector2d(-47.5, 43.5), Math.toRadians(270))
                 .addDisplacementMarker(() -> {
                     placePixel();
                 })
@@ -95,8 +96,9 @@ public class FarBlueRR extends OpMode {
 
         trajectory2 = drive.trajectorySequenceBuilder(trajectory.end())
                 .setTangent(Math.toRadians(90))
-                .splineToConstantHeading(new Vector2d(-36, 31), Math.toRadians(270))
-                .lineTo(new Vector2d(-36, 25))
+                .splineToConstantHeading(new Vector2d(-39, 31), Math.toRadians(270))
+                .lineTo(new Vector2d(-39, 15))
+                .waitSeconds(3)
                 .addDisplacementMarker(() -> {
                     distance2 = Math.min(ds.getDistance(DistanceUnit.CM), distance1);
                     if (distance2 <= 16) {
@@ -110,17 +112,18 @@ public class FarBlueRR extends OpMode {
         placePixel2 = drive.trajectorySequenceBuilder(trajectory2.end())
                 .setTangent(90)
                 .lineTo(new Vector2d(-36, 30))
-                .splineToConstantHeading(new Vector2d(-40.5, 30), Math.toRadians(270))
+                .splineToConstantHeading(new Vector2d(-52, 21), Math.toRadians(270))
                 .addDisplacementMarker(() -> {
                     placePixel();
                 })
                 .build();
 
         placePixel3 = drive.trajectorySequenceBuilder(trajectory2.end())
-                .lineToLinearHeading(new Pose2d(-35.5, 33.5, Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(-42.5, 22.5, Math.toRadians(90)))
                 .addDisplacementMarker(() -> {
                     placePixel();
                 })
+                .waitSeconds(1)
                 .build();
 
         drive.followTrajectorySequenceAsync(trajectory);
@@ -129,7 +132,7 @@ public class FarBlueRR extends OpMode {
     public void placePixel() {
         et.reset();
         state = States.PLACE_PIXEL;
-        armPosition = RobotStatics.PLACE.clone();
+        armPosition = RobotStatics.PICKUP.clone();
     }
 
     @Override
@@ -145,6 +148,10 @@ public class FarBlueRR extends OpMode {
         arm1.setTargetPosition((int) armPosition[0]);
         arm2.setTargetPosition((int) armPosition[1]);
         clawHinge.setPosition(armPosition[2]);
+
+        telemetry.addData("arm1 theo", armPosition[0]);
+        telemetry.addData("arm2 theo", armPosition[1]);
+        telemetry.addData("claw theo", armPosition[2]);
 
         telemetry.addData("distance 1", distance1);
         telemetry.addData("distance 2", distance2);

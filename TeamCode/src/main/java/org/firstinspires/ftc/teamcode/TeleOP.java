@@ -198,6 +198,8 @@ public class TeleOP extends OpMode {
         telemetry.addData("drone pos: ", droneHinge.getPosition());
         telemetry.addData("arm1 en", arm1.getCurrentPosition());
         telemetry.addData("arm2 en", arm2.getCurrentPosition());
+        telemetry.addData("arm pos", armPosition[0]);
+        telemetry.addData("arm2 pos", armPosition[1]);
         telemetry.addData("claw hinge Pos", claw.getPosition());
         
         telemetry.update();
